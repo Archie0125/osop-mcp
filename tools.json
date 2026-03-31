@@ -1,0 +1,209 @@
+{
+  "tools": [
+    {
+      "name": "osop.validate",
+      "description": "Validate an OSOP workflow definition against the schema. Returns a list of errors and warnings with line numbers.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "The OSOP YAML content to validate."
+          },
+          "file_path": {
+            "type": "string",
+            "description": "Path to an .osop.yaml file to validate. Use either content or file_path."
+          },
+          "strict": {
+            "type": "boolean",
+            "description": "When true, treat warnings as errors.",
+            "default": false
+          }
+        },
+        "oneOf": [
+          { "required": ["content"] },
+          { "required": ["file_path"] }
+        ]
+      }
+    },
+    {
+      "name": "osop.run",
+      "description": "Execute an OSOP workflow with the given inputs. Returns execution results including node outputs and final state.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "The OSOP YAML content to execute."
+          },
+          "file_path": {
+            "type": "string",
+            "description": "Path to an .osop.yaml file to execute."
+          },
+          "inputs": {
+            "type": "object",
+            "description": "Input values for the workflow.",
+            "additionalProperties": true
+          },
+          "dry_run": {
+            "type": "boolean",
+            "description": "When true, simulate execution without side effects.",
+            "default": false
+          },
+          "timeout_seconds": {
+            "type": "integer",
+            "description": "Maximum execution time in seconds.",
+            "default": 300
+          }
+        },
+        "oneOf": [
+          { "required": ["content"] },
+          { "required": ["file_path"] }
+        ]
+      }
+    },
+    {
+      "name": "osop.render",
+      "description": "Render an OSOP workflow as a visual diagram. Supports Mermaid, ASCII, and SVG output formats.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "The OSOP YAML content to render."
+          },
+          "file_path": {
+            "type": "string",
+            "description": "Path to an .osop.yaml file to render."
+          },
+          "format": {
+            "type": "string",
+            "enum": ["mermaid", "ascii", "svg"],
+            "description": "Output format for the diagram.",
+            "default": "mermaid"
+          },
+          "direction": {
+            "type": "string",
+            "enum": ["TB", "LR"],
+            "description": "Graph direction: top-to-bottom or left-to-right.",
+            "default": "TB"
+          }
+        },
+        "oneOf": [
+          { "required": ["content"] },
+          { "required": ["file_path"] }
+        ]
+      }
+    },
+    {
+      "name": "osop.test",
+      "description": "Run test cases defined within an OSOP workflow. Returns pass/fail results for each test case with details.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "The OSOP YAML content containing test cases."
+          },
+          "file_path": {
+            "type": "string",
+            "description": "Path to an .osop.yaml file containing test cases."
+          },
+          "filter": {
+            "type": "string",
+            "description": "Run only test cases matching this pattern."
+          },
+          "verbose": {
+            "type": "boolean",
+            "description": "Include detailed output for each test step.",
+            "default": false
+          }
+        },
+        "oneOf": [
+          { "required": ["content"] },
+          { "required": ["file_path"] }
+        ]
+      }
+    },
+    {
+      "name": "osop.optimize",
+      "description": "Analyze an OSOP workflow and suggest optimizations: parallelization, redundancy removal, bottleneck identification, and simplification.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "The OSOP YAML content to analyze."
+          },
+          "file_path": {
+            "type": "string",
+            "description": "Path to an .osop.yaml file to analyze."
+          },
+          "apply": {
+            "type": "boolean",
+            "description": "When true, return the optimized OSOP YAML. When false, return suggestions only.",
+            "default": false
+          }
+        },
+        "oneOf": [
+          { "required": ["content"] },
+          { "required": ["file_path"] }
+        ]
+      }
+    },
+    {
+      "name": "osop.import",
+      "description": "Convert an external workflow format into OSOP. Supported sources: GitHub Actions, BPMN, Airflow DAG, Temporal, Postman Collection, OpenAPI.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "The source content to convert."
+          },
+          "file_path": {
+            "type": "string",
+            "description": "Path to the source file to convert."
+          },
+          "source_format": {
+            "type": "string",
+            "enum": ["github-actions", "bpmn", "airflow", "temporal", "postman", "openapi"],
+            "description": "The format of the source content."
+          }
+        },
+        "required": ["source_format"],
+        "oneOf": [
+          { "required": ["content", "source_format"] },
+          { "required": ["file_path", "source_format"] }
+        ]
+      }
+    },
+    {
+      "name": "osop.export",
+      "description": "Convert an OSOP workflow to an external format. Supported targets: GitHub Actions, BPMN, Airflow DAG, Temporal, Postman Collection, OpenAPI.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "The OSOP YAML content to export."
+          },
+          "file_path": {
+            "type": "string",
+            "description": "Path to an .osop.yaml file to export."
+          },
+          "target_format": {
+            "type": "string",
+            "enum": ["github-actions", "bpmn", "airflow", "temporal", "postman", "openapi"],
+            "description": "The target format to convert to."
+          }
+        },
+        "required": ["target_format"],
+        "oneOf": [
+          { "required": ["content", "target_format"] },
+          { "required": ["file_path", "target_format"] }
+        ]
+      }
+    }
+  ]
+}
