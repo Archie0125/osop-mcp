@@ -204,6 +204,45 @@
           { "required": ["file_path", "target_format"] }
         ]
       }
+    },
+    {
+      "name": "osop.report",
+      "description": "Generate a report from OSOP workflow + optional execution log. Returns self-contained HTML or plain text.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "content": { "type": "string", "description": "OSOP YAML content" },
+          "file_path": { "type": "string", "description": "Path to .osop file (alternative to content)" },
+          "log_content": { "type": "string", "description": "OSOPLOG YAML content (optional, enables execution mode)" },
+          "log_file_path": { "type": "string", "description": "Path to .osoplog file (alternative to log_content)" },
+          "format": { "type": "string", "enum": ["html", "text"], "default": "html", "description": "Output format" }
+        },
+        "oneOf": [
+          { "required": ["content"] },
+          { "required": ["file_path"] }
+        ]
+      }
+    },
+    {
+      "name": "osop.risk_assess",
+      "description": "Analyze an OSOP workflow for security risks, permission gaps, unguarded destructive paths, missing approval gates, cost exposure, and segregation of duties violations. Returns a risk score (0-100), verdict (safe/caution/warning/danger), and actionable findings.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "The OSOP YAML content to assess."
+          },
+          "file_path": {
+            "type": "string",
+            "description": "Path to an .osop.yaml file to assess."
+          }
+        },
+        "oneOf": [
+          { "required": ["content"] },
+          { "required": ["file_path"] }
+        ]
+      }
     }
   ]
 }
