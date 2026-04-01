@@ -16,6 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from tools.validate import validate
 from tools.render import render
 from tools.risk_assess import risk_assess
+from tools.optimize import optimize
 from tools.common import load_yaml
 
 # Load tool definitions from tools.json
@@ -99,35 +100,12 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
             }
 
         elif name == "osop.optimize":
-            raw, parsed = load_yaml(
+            result = optimize(
                 content=arguments.get("content"),
                 file_path=arguments.get("file_path"),
+                apply=arguments.get("apply", False),
+                run_history=arguments.get("run_history"),
             )
-            nodes = parsed.get("nodes", [])
-            edges = parsed.get("edges", [])
-            suggestions = []
-
-            # Check for parallelization opportunities
-            sequential_pairs = [
-                e for e in edges
-                if isinstance(e, dict) and e.get("mode", "sequential") == "sequential"
-            ]
-            if len(sequential_pairs) > 3:
-                suggestions.append({
-                    "type": "parallelize",
-                    "description": f"Found {len(sequential_pairs)} sequential edges. Consider parallelizing independent steps.",
-                })
-
-            # Check for missing retry on external calls
-            for node in nodes:
-                if isinstance(node, dict) and node.get("type") in ("api", "cli", "agent") and not node.get("retry_policy"):
-                    suggestions.append({
-                        "type": "add_retry",
-                        "target": node.get("id"),
-                        "description": f'Node "{node.get("name", node.get("id"))}" makes external calls without retry policy.',
-                    })
-
-            result = {"suggestions": suggestions, "suggestion_count": len(suggestions)}
 
         elif name == "osop.report":
             raw, parsed = load_yaml(
