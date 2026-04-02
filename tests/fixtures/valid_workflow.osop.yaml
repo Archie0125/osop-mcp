@@ -1,0 +1,17 @@
+osop_version: "1.0"
+id: "fixture-workflow"
+name: "Fixture Workflow"
+description: "A valid workflow fixture for testing."
+nodes:
+  - id: "step_a"
+    type: "cli"
+    name: "Step A"
+    description: "First step."
+  - id: "step_b"
+    type: "api"
+    name: "Step B"
+    description: "Second step."
+edges:
+  - from: "step_a"
+    to: "step_b"
+    mode: "sequential"

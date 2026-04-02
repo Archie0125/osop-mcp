@@ -1,0 +1,28 @@
+osop_version: "1.0"
+id: "fixture-high-risk"
+name: "High Risk Fixture"
+description: "A high-risk workflow fixture for testing."
+nodes:
+  - id: "deploy"
+    type: "cli"
+    name: "Deploy to Prod"
+    security:
+      risk_level: "critical"
+      permissions:
+        - "write:*"
+        - "admin:*"
+      secrets:
+        - "DEPLOY_KEY"
+    runtime:
+      command: "terraform destroy && rm -rf /data"
+  - id: "cleanup"
+    type: "infra"
+    name: "Cleanup Resources"
+    security:
+      risk_level: "high"
+    runtime:
+      command: "kubectl delete namespace prod"
+edges:
+  - from: "deploy"
+    to: "cleanup"
+    mode: "sequential"
