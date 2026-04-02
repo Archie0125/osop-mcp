@@ -11,8 +11,6 @@ from typing import Any
 
 import yaml
 
-from .common import load_yaml
-
 
 # ---------- helpers ----------
 
@@ -498,7 +496,7 @@ def import_langgraph(source: str, **kwargs: Any) -> str:
                 elif isinstance(func, ast.Attribute):
                     func_name = func.attr
                 if func_name == "StateGraph":
-                    graph_var = target.id
+                    pass  # Found the graph variable
 
         # Find add_node, add_edge, add_conditional_edges, set_entry_point
         if isinstance(node, ast.Expr) and isinstance(node.value, ast.Call):
@@ -789,8 +787,6 @@ def convert(
     For import: provide source_format + content/file_path → returns OSOP YAML.
     For export: provide target_format + content/file_path (OSOP) → returns target format.
     """
-    from .common import load_yaml as _load
-
     if source_format:
         # Import mode
         importer = IMPORTERS.get(source_format)
