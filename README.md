@@ -14,13 +14,16 @@ Website: [osop.ai](https://osop.ai) | Editor: [osop-editor.vercel.app](https://o
 |------|-------------|
 | `osop.validate` | Validate an `.osop.yaml` file against the OSOP schema. Returns errors and warnings. |
 | `osop.risk_assess` | **Analyze workflow for security risks** — permission gaps, missing approval gates, destructive commands, cost exposure. Returns risk score (0-100) and actionable findings. |
-| `osop.run` | Execute a workflow with given inputs. Supports dry-run mode. |
+| `osop.run` | Execute CLI/API nodes in a workflow with timeout support. Supports dry-run mode. |
 | `osop.render` | Render a workflow as Mermaid or ASCII diagram. |
 | `osop.test` | Run test cases defined in the workflow and report pass/fail results. |
 | `osop.optimize` | Analyze a workflow for redundancies, parallelization opportunities, and bottlenecks. |
 | `osop.report` | Generate HTML or text reports from workflow + optional execution log. |
-| `osop.import` | Convert external formats (GitHub Actions, BPMN, Airflow DAG) into OSOP. |
-| `osop.export` | Convert an OSOP workflow to an external format. |
+| `osop.convert` | Unified format conversion — import/export between OSOP and 6 external formats. |
+| `osop.import` | Convert external formats (CrewAI, n8n, GitHub Actions, Airflow, Argo, LangGraph) into OSOP. |
+| `osop.export` | Convert an OSOP workflow to CrewAI, n8n, or Argo format. |
+| `osop.diff` | Structural comparison of two OSOP workflows — added/removed/changed nodes and edges. |
+| `osop.notion` | Convert OSOP workflow to Notion database-ready structures (schema + page payloads). |
 
 ## Installation
 

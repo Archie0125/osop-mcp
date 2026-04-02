@@ -14,10 +14,13 @@ RUN addgroup --system --gid 1001 osop && \
     adduser --system --uid 1001 --ingroup osop osop
 
 COPY pyproject.toml README.md ./
-COPY osop_mcp/ ./osop_mcp/
+COPY server/ ./server/
+COPY tools/ ./tools/
+COPY tools.json ./
+COPY __main__.py ./
 
 RUN pip install --no-cache-dir .
 
 USER osop
 
-ENTRYPOINT ["python", "-m", "osop_mcp"]
+ENTRYPOINT ["python", "__main__.py"]
