@@ -1,0 +1,60 @@
+{
+  "name": "osop-mcp",
+  "displayName": "OSOP — Open Standard Operating Procedures",
+  "description": "Validate, render, convert, diff, optimize, and execute OSOP workflow definitions. Import from CrewAI, n8n, GitHub Actions, Airflow, Argo, and LangGraph. Export to CrewAI, n8n, and Argo.",
+  "version": "0.1.0",
+  "author": "OSOP Contributors",
+  "license": "Apache-2.0",
+  "homepage": "https://osop.ai",
+  "repository": "https://github.com/Archie0125/osop-mcp",
+  "tags": [
+    "workflow",
+    "osop",
+    "sop",
+    "automation",
+    "ai-agents",
+    "crewai",
+    "n8n",
+    "github-actions",
+    "airflow",
+    "argo",
+    "langgraph",
+    "notion",
+    "converter",
+    "validator"
+  ],
+  "tools": [
+    "osop.validate",
+    "osop.render",
+    "osop.run",
+    "osop.convert",
+    "osop.import",
+    "osop.export",
+    "osop.diff",
+    "osop.optimize",
+    "osop.risk_assess",
+    "osop.report",
+    "osop.test",
+    "osop.notion"
+  ],
+  "runtime": {
+    "type": "python",
+    "command": "python -m server.main",
+    "cwd": ".",
+    "env": {}
+  },
+  "install": {
+    "pip": "osop-mcp"
+  },
+  "config": {
+    "claude_desktop": {
+      "mcpServers": {
+        "osop": {
+          "command": "python",
+          "args": ["-m", "server.main"],
+          "cwd": "/path/to/osop-mcp"
+        }
+      }
+    }
+  }
+}

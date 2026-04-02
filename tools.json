@@ -153,7 +153,7 @@
     },
     {
       "name": "osop.import",
-      "description": "Convert an external workflow format into OSOP. Supported sources: GitHub Actions, BPMN, Airflow DAG, Temporal, Postman Collection, OpenAPI.",
+      "description": "Convert an external workflow format into OSOP. Supported: CrewAI, n8n, GitHub Actions, Airflow, Argo Workflows, LangGraph.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -167,7 +167,7 @@
           },
           "source_format": {
             "type": "string",
-            "enum": ["github-actions", "bpmn", "airflow", "temporal", "postman", "openapi"],
+            "enum": ["github-actions", "airflow", "crewai", "n8n", "argo", "langgraph"],
             "description": "The format of the source content."
           }
         },
@@ -180,7 +180,7 @@
     },
     {
       "name": "osop.export",
-      "description": "Convert an OSOP workflow to an external format. Supported targets: GitHub Actions, BPMN, Airflow DAG, Temporal, Postman Collection, OpenAPI.",
+      "description": "Convert an OSOP workflow to an external format. Supported: CrewAI, n8n, Argo Workflows.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -194,7 +194,7 @@
           },
           "target_format": {
             "type": "string",
-            "enum": ["github-actions", "bpmn", "airflow", "temporal", "postman", "openapi"],
+            "enum": ["github-actions", "airflow", "crewai", "n8n", "argo"],
             "description": "The target format to convert to."
           }
         },
@@ -216,6 +216,55 @@
           "log_content": { "type": "string", "description": "OSOPLOG YAML content (optional, enables execution mode)" },
           "log_file_path": { "type": "string", "description": "Path to .osoplog file (alternative to log_content)" },
           "format": { "type": "string", "enum": ["html", "text"], "default": "html", "description": "Output format" }
+        },
+        "oneOf": [
+          { "required": ["content"] },
+          { "required": ["file_path"] }
+        ]
+      }
+    },
+    {
+      "name": "osop.convert",
+      "description": "Convert between OSOP and external workflow formats. Supports CrewAI, n8n, GitHub Actions, Airflow, Argo Workflows, and LangGraph.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "content": { "type": "string", "description": "Source content to convert." },
+          "file_path": { "type": "string", "description": "Path to source file." },
+          "source_format": {
+            "type": "string",
+            "enum": ["github-actions", "airflow", "crewai", "n8n", "argo", "langgraph"],
+            "description": "Source format (for importing TO OSOP)."
+          },
+          "target_format": {
+            "type": "string",
+            "enum": ["crewai", "n8n", "argo"],
+            "description": "Target format (for exporting FROM OSOP)."
+          }
+        }
+      }
+    },
+    {
+      "name": "osop.diff",
+      "description": "Compare two OSOP workflows structurally. Returns added/removed/changed nodes, edges, and metadata.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "content_a": { "type": "string", "description": "First OSOP YAML content." },
+          "file_path_a": { "type": "string", "description": "Path to first .osop.yaml file." },
+          "content_b": { "type": "string", "description": "Second OSOP YAML content." },
+          "file_path_b": { "type": "string", "description": "Path to second .osop.yaml file." }
+        }
+      }
+    },
+    {
+      "name": "osop.notion",
+      "description": "Convert an OSOP workflow into Notion database-ready structures. Returns database schema and page payloads for the Notion API.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "content": { "type": "string", "description": "OSOP YAML content." },
+          "file_path": { "type": "string", "description": "Path to .osop.yaml file." }
         },
         "oneOf": [
           { "required": ["content"] },

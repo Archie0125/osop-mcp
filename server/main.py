@@ -17,6 +17,10 @@ from tools.validate import validate
 from tools.render import render
 from tools.risk_assess import risk_assess
 from tools.optimize import optimize
+from tools.convert import convert as convert_workflow
+from tools.diff import diff_workflows
+from tools.execute import execute as execute_workflow
+from tools.notion import osop_to_notion
 from tools.common import load_yaml
 
 # Load tool definitions from tools.json
@@ -67,19 +71,13 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
             )
 
         elif name == "osop.run":
-            # Mock execution — real execution is Phase 2
-            raw, parsed = load_yaml(
+            result = execute_workflow(
                 content=arguments.get("content"),
                 file_path=arguments.get("file_path"),
+                inputs=arguments.get("inputs"),
+                dry_run=arguments.get("dry_run", False),
+                timeout_seconds=arguments.get("timeout_seconds", 300),
             )
-            dry_run = arguments.get("dry_run", False)
-            nodes = parsed.get("nodes", [])
-            result = {
-                "status": "completed" if dry_run else "completed (mock)",
-                "mode": "dry_run" if dry_run else "mock",
-                "nodes_executed": len(nodes),
-                "message": "Dry-run completed successfully." if dry_run else "Mock execution completed. Real execution not yet implemented.",
-            }
 
         elif name == "osop.test":
             raw, parsed = load_yaml(
@@ -129,7 +127,36 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                 result = {"format": "html", "report": f"<h1>OSOP Report: {wf_name}</h1><p>{len(nodes)} nodes</p>"}
 
         elif name in ("osop.import", "osop.export"):
-            result = {"error": f"{name} is not yet implemented. Coming in the next release."}
+            source_fmt = arguments.get("source_format")
+            target_fmt = arguments.get("target_format")
+            result = convert_workflow(
+                content=arguments.get("content"),
+                file_path=arguments.get("file_path"),
+                source_format=source_fmt,
+                target_format=target_fmt,
+            )
+
+        elif name == "osop.convert":
+            result = convert_workflow(
+                content=arguments.get("content"),
+                file_path=arguments.get("file_path"),
+                source_format=arguments.get("source_format"),
+                target_format=arguments.get("target_format"),
+            )
+
+        elif name == "osop.diff":
+            result = diff_workflows(
+                content_a=arguments.get("content_a"),
+                file_path_a=arguments.get("file_path_a"),
+                content_b=arguments.get("content_b"),
+                file_path_b=arguments.get("file_path_b"),
+            )
+
+        elif name == "osop.notion":
+            result = osop_to_notion(
+                content=arguments.get("content"),
+                file_path=arguments.get("file_path"),
+            )
 
         else:
             result = {"error": f"Unknown tool: {name}"}
