@@ -4,7 +4,7 @@
 
 ### Workflow & Automation
 
-- **[OSOP MCP Server](https://github.com/Archie0125/osop-mcp)** — Validate, render, convert, diff, optimize, and execute OSOP workflow definitions. Import from CrewAI, n8n, GitHub Actions, Airflow, Argo, and LangGraph. 12 tools for AI agents to work with structured workflows.
+- **[OSOP MCP Server](https://github.com/Archie0125/osop-mcp)** — 5 tools for AI agent workflows: validate schemas, render Mermaid diagrams, generate reports, diff workflows, and assess security risks. The standard format for describing and logging what AI agents do.
 
 ## PR Details
 
@@ -13,25 +13,26 @@
 - https://github.com/TensorBlock/awesome-mcp-servers
 - https://github.com/wong2/awesome-mcp-servers
 
-**Title:** Add OSOP MCP Server — workflow validation, conversion, and execution
+**Title:** Add OSOP MCP Server — AI agent workflow validation, visualization, and risk analysis
 
 **Body:**
+
 Adds the OSOP MCP Server to the Workflow & Automation section.
 
-OSOP (Open Standard Operating Procedures) is an open protocol for defining AI agent workflows in YAML. The MCP server provides 12 tools:
+OSOP is the standard format for describing and logging AI agent workflows. Two YAML files: `.osop` (what should happen) and `.osoplog` (what actually happened).
 
-- **osop.validate** — Validate workflows against JSON Schema
-- **osop.render** — Generate Mermaid/ASCII diagrams
-- **osop.convert** — Import from CrewAI, n8n, GitHub Actions, Airflow, Argo, LangGraph
-- **osop.diff** — Structural comparison of two workflows
-- **osop.optimize** — Find parallelization opportunities
-- **osop.risk_assess** — Security and permission analysis
-- **osop.run** — Execute CLI/API nodes with timeout
-- **osop.report** — Generate HTML execution reports
-- **osop.notion** — Convert to Notion database format
+The MCP server provides 5 focused tools:
 
-Works with Claude Desktop, Cursor, Copilot, and any MCP client.
+| Tool | What it does |
+|------|-------------|
+| `osop.validate` | Validate workflows against Core (4 types) or Full (12 types) schema |
+| `osop.render` | Generate Mermaid or ASCII diagrams |
+| `osop.report` | Generate HTML/text reports from workflow + execution log |
+| `osop.diff` | Structural comparison of two workflows |
+| `osop.risk_assess` | Security risk score (0-100) with actionable findings |
+
+Works with Claude Desktop, Claude Code, Cursor, Windsurf, and any MCP client.
 
 - [GitHub](https://github.com/Archie0125/osop-mcp)
-- [OSOP Spec](https://github.com/Archie0125/osop-spec)
-- [Website](https://osop.ai)
+- [Spec](https://github.com/Archie0125/osop-spec)
+- [Visual Editor](https://osop-editor.vercel.app)

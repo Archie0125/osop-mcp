@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "osop": {
+      "command": "python",
+      "args": ["-m", "server.main"],
+      "cwd": "."
+    }
+  }
+}
