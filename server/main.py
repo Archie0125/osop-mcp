@@ -1,6 +1,6 @@
-"""OSOP MCP Server — Expose OSOP workflow operations as MCP tools for AI agents.
+"""OSOP MCP Server — Validate, Record, Diff, Optimize AI agent workflows.
 
-Focused on 5 core tools: validate, render, report, diff, risk_assess.
+Four tools: validate, record, diff, optimize.
 """
 
 from __future__ import annotations
@@ -17,9 +17,7 @@ from mcp.types import Tool, TextContent
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from tools.validate import validate
-from tools.render import render
-from tools.risk_assess import risk_assess
-from tools.diff import diff_workflows
+from tools.diff import diff_workflows, diff_logs
 from tools.common import load_yaml
 
 # Load tool definitions from tools.json
@@ -53,50 +51,74 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                 content=arguments.get("content"),
                 file_path=arguments.get("file_path"),
                 strict=arguments.get("strict", False),
+                schema_variant=arguments.get("schema_variant", "core"),
             )
 
-        elif name == "osop.render":
-            result = render(
-                content=arguments.get("content"),
-                file_path=arguments.get("file_path"),
-                format=arguments.get("format", "mermaid"),
-                direction=arguments.get("direction", "TB"),
-            )
-
-        elif name == "osop.risk_assess":
-            result = risk_assess(
-                content=arguments.get("content"),
-                file_path=arguments.get("file_path"),
-            )
-
-        elif name == "osop.report":
+        elif name == "osop.record":
+            # Validate internally first
             raw, parsed = load_yaml(
                 content=arguments.get("content"),
                 file_path=arguments.get("file_path"),
             )
-            fmt = arguments.get("format", "text")
-            wf_name = parsed.get("name", "Workflow")
-            nodes = parsed.get("nodes", [])
-
-            if fmt == "text":
-                lines = [f"=== OSOP Report: {wf_name} ===", ""]
-                lines.append(f"Nodes: {len(nodes)}")
-                lines.append(f"Edges: {len(parsed.get('edges', []))}")
-                lines.append("")
-                for n in nodes:
-                    if isinstance(n, dict):
-                        lines.append(f"  [{n.get('type', '?')}] {n.get('id', '?')}: {n.get('name', '')}")
-                result = {"format": "text", "report": "\n".join(lines)}
+            val_result = validate(
+                content=arguments.get("content"),
+                file_path=arguments.get("file_path"),
+                schema_variant="core",
+            )
+            if not val_result.get("valid"):
+                result = {"status": "invalid", "errors": val_result.get("errors", [])}
             else:
-                result = {"format": "html", "report": f"<h1>OSOP Report: {wf_name}</h1><p>{len(nodes)} nodes</p>"}
+                # Try real execution
+                try:
+                    from tools.execute import execute
+                    result = execute(
+                        file_path=arguments.get("file_path"),
+                        content=arguments.get("content"),
+                        dry_run=arguments.get("dry_run", False),
+                        allow_exec=arguments.get("allow_exec", False),
+                    )
+                except ImportError:
+                    # Mock execution — return workflow structure as record
+                    nodes = parsed.get("nodes", [])
+                    result = {
+                        "status": "mock",
+                        "workflow_id": parsed.get("id"),
+                        "nodes_count": len(nodes),
+                        "node_ids": [n.get("id") for n in nodes if isinstance(n, dict)],
+                        "message": "Executor not available. Workflow validated successfully.",
+                    }
 
         elif name == "osop.diff":
-            result = diff_workflows(
-                content_a=arguments.get("content_a"),
-                file_path_a=arguments.get("file_path_a"),
-                content_b=arguments.get("content_b"),
-                file_path_b=arguments.get("file_path_b"),
-            )
+            # Auto-detect log vs workflow
+            file_a = arguments.get("file_path_a", "")
+            is_log = file_a.endswith(".osoplog.yaml") or file_a.endswith(".osoplog.yml")
+
+            if is_log:
+                result = diff_logs(
+                    content_a=arguments.get("content_a"),
+                    file_path_a=arguments.get("file_path_a"),
+                    content_b=arguments.get("content_b"),
+                    file_path_b=arguments.get("file_path_b"),
+                )
+            else:
+                result = diff_workflows(
+                    content_a=arguments.get("content_a"),
+                    file_path_a=arguments.get("file_path_a"),
+                    content_b=arguments.get("content_b"),
+                    file_path_b=arguments.get("file_path_b"),
+                )
+
+        elif name == "osop.optimize":
+            try:
+                from tools.synthesize import synthesize
+                result = synthesize(
+                    log_paths=arguments.get("log_paths", []),
+                    base_osop_path=arguments.get("base_osop_path"),
+                    goal=arguments.get("goal", ""),
+                    prompt_only=arguments.get("prompt_only", False),
+                )
+            except ImportError:
+                result = {"error": "Synthesize module not available. Ensure osop-mcp is properly installed."}
 
         else:
             result = {"error": f"Unknown tool: {name}"}

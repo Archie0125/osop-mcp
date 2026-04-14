@@ -11,32 +11,34 @@ import yaml
 
 from .common import load_yaml
 
-# Load the schema once at import time
-_SCHEMA_PATH = Path(__file__).resolve().parent.parent.parent / "osop-spec" / "schema" / "osop.schema.json"
-_SCHEMA: dict | None = None
+# Load schemas once at import time
+_SPEC_DIR = Path(__file__).resolve().parent.parent.parent / "osop-spec" / "schema"
+_SCHEMAS: dict[str, dict] = {}
 
 
-def _get_schema() -> dict:
-    global _SCHEMA
-    if _SCHEMA is None:
-        if _SCHEMA_PATH.exists():
-            _SCHEMA = json.loads(_SCHEMA_PATH.read_text(encoding="utf-8"))
+def _get_schema(variant: str = "core") -> dict:
+    if variant not in _SCHEMAS:
+        filename = "osop-core.schema.json" if variant == "core" else "osop.schema.json"
+        path = _SPEC_DIR / filename
+        if path.exists():
+            _SCHEMAS[variant] = json.loads(path.read_text(encoding="utf-8"))
         else:
-            raise FileNotFoundError(f"OSOP schema not found at {_SCHEMA_PATH}")
-    return _SCHEMA
+            raise FileNotFoundError(f"OSOP schema not found at {path}")
+    return _SCHEMAS[variant]
 
 
 def validate(
     content: str | None = None,
     file_path: str | None = None,
     strict: bool = False,
+    schema_variant: str = "core",
 ) -> dict[str, Any]:
     """Validate an OSOP workflow against the JSON Schema.
 
     Returns dict with: valid (bool), errors (list), warnings (list).
     """
     raw, parsed = load_yaml(content, file_path)
-    schema = _get_schema()
+    schema = _get_schema(schema_variant)
 
     errors: list[dict] = []
     warnings: list[dict] = []

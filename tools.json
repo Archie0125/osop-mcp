@@ -2,7 +2,7 @@
   "tools": [
     {
       "name": "osop.validate",
-      "description": "Validate an OSOP workflow definition against the schema. Returns a list of errors and warnings with line numbers.",
+      "description": "Validate an OSOP workflow or execution log against the schema. Returns errors with locations. Use before record to check format.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -12,12 +12,13 @@
           },
           "file_path": {
             "type": "string",
-            "description": "Path to an .osop.yaml file to validate. Use either content or file_path."
+            "description": "Path to an .osop.yaml or .osoplog.yaml file to validate."
           },
-          "strict": {
-            "type": "boolean",
-            "description": "When true, treat warnings as errors.",
-            "default": false
+          "schema_variant": {
+            "type": "string",
+            "enum": ["core", "full"],
+            "description": "Schema variant: 'core' (4 node types) or 'full' (all types).",
+            "default": "core"
           }
         },
         "oneOf": [
@@ -27,8 +28,8 @@
       }
     },
     {
-      "name": "osop.run",
-      "description": "Execute an OSOP workflow with the given inputs. Returns execution results including node outputs and final state.",
+      "name": "osop.record",
+      "description": "Execute an OSOP workflow and produce an .osoplog execution record. Validates the workflow internally before execution. The core OSOP operation.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -40,82 +41,14 @@
             "type": "string",
             "description": "Path to an .osop.yaml file to execute."
           },
-          "inputs": {
-            "type": "object",
-            "description": "Input values for the workflow.",
-            "additionalProperties": true
-          },
           "dry_run": {
             "type": "boolean",
-            "description": "When true, simulate execution without side effects.",
+            "description": "Simulate execution without running commands.",
             "default": false
           },
-          "timeout_seconds": {
-            "type": "integer",
-            "description": "Maximum execution time in seconds.",
-            "default": 300
-          }
-        },
-        "oneOf": [
-          { "required": ["content"] },
-          { "required": ["file_path"] }
-        ]
-      }
-    },
-    {
-      "name": "osop.render",
-      "description": "Render an OSOP workflow as a visual diagram. Supports Mermaid, ASCII, and SVG output formats.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "content": {
-            "type": "string",
-            "description": "The OSOP YAML content to render."
-          },
-          "file_path": {
-            "type": "string",
-            "description": "Path to an .osop.yaml file to render."
-          },
-          "format": {
-            "type": "string",
-            "enum": ["mermaid", "ascii", "svg"],
-            "description": "Output format for the diagram.",
-            "default": "mermaid"
-          },
-          "direction": {
-            "type": "string",
-            "enum": ["TB", "LR"],
-            "description": "Graph direction: top-to-bottom or left-to-right.",
-            "default": "TB"
-          }
-        },
-        "oneOf": [
-          { "required": ["content"] },
-          { "required": ["file_path"] }
-        ]
-      }
-    },
-    {
-      "name": "osop.test",
-      "description": "Run test cases defined within an OSOP workflow. Returns pass/fail results for each test case with details.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "content": {
-            "type": "string",
-            "description": "The OSOP YAML content containing test cases."
-          },
-          "file_path": {
-            "type": "string",
-            "description": "Path to an .osop.yaml file containing test cases."
-          },
-          "filter": {
-            "type": "string",
-            "description": "Run only test cases matching this pattern."
-          },
-          "verbose": {
+          "allow_exec": {
             "type": "boolean",
-            "description": "Include detailed output for each test step.",
+            "description": "Allow CLI nodes to execute shell commands.",
             "default": false
           }
         },
@@ -123,174 +56,62 @@
           { "required": ["content"] },
           { "required": ["file_path"] }
         ]
-      }
-    },
-    {
-      "name": "osop.optimize",
-      "description": "Analyze an OSOP workflow and suggest optimizations: parallelization, redundancy removal, bottleneck identification, and simplification.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "content": {
-            "type": "string",
-            "description": "The OSOP YAML content to analyze."
-          },
-          "file_path": {
-            "type": "string",
-            "description": "Path to an .osop.yaml file to analyze."
-          },
-          "apply": {
-            "type": "boolean",
-            "description": "When true, return the optimized OSOP YAML. When false, return suggestions only.",
-            "default": false
-          }
-        },
-        "oneOf": [
-          { "required": ["content"] },
-          { "required": ["file_path"] }
-        ]
-      }
-    },
-    {
-      "name": "osop.import",
-      "description": "Convert an external workflow format into OSOP. Supported: CrewAI, n8n, GitHub Actions, Airflow, Argo Workflows, LangGraph.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "content": {
-            "type": "string",
-            "description": "The source content to convert."
-          },
-          "file_path": {
-            "type": "string",
-            "description": "Path to the source file to convert."
-          },
-          "source_format": {
-            "type": "string",
-            "enum": ["github-actions", "airflow", "crewai", "n8n", "argo", "langgraph"],
-            "description": "The format of the source content."
-          }
-        },
-        "required": ["source_format"],
-        "oneOf": [
-          { "required": ["content", "source_format"] },
-          { "required": ["file_path", "source_format"] }
-        ]
-      }
-    },
-    {
-      "name": "osop.export",
-      "description": "Convert an OSOP workflow to an external format. Supported: CrewAI, n8n, Argo Workflows.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "content": {
-            "type": "string",
-            "description": "The OSOP YAML content to export."
-          },
-          "file_path": {
-            "type": "string",
-            "description": "Path to an .osop.yaml file to export."
-          },
-          "target_format": {
-            "type": "string",
-            "enum": ["github-actions", "airflow", "crewai", "n8n", "argo"],
-            "description": "The target format to convert to."
-          }
-        },
-        "required": ["target_format"],
-        "oneOf": [
-          { "required": ["content", "target_format"] },
-          { "required": ["file_path", "target_format"] }
-        ]
-      }
-    },
-    {
-      "name": "osop.report",
-      "description": "Generate a report from OSOP workflow + optional execution log. Returns self-contained HTML or plain text.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "content": { "type": "string", "description": "OSOP YAML content" },
-          "file_path": { "type": "string", "description": "Path to .osop file (alternative to content)" },
-          "log_content": { "type": "string", "description": "OSOPLOG YAML content (optional, enables execution mode)" },
-          "log_file_path": { "type": "string", "description": "Path to .osoplog file (alternative to log_content)" },
-          "format": { "type": "string", "enum": ["html", "text"], "default": "html", "description": "Output format" }
-        },
-        "oneOf": [
-          { "required": ["content"] },
-          { "required": ["file_path"] }
-        ]
-      }
-    },
-    {
-      "name": "osop.convert",
-      "description": "Convert between OSOP and external workflow formats. Supports CrewAI, n8n, GitHub Actions, Airflow, Argo Workflows, and LangGraph.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "content": { "type": "string", "description": "Source content to convert." },
-          "file_path": { "type": "string", "description": "Path to source file." },
-          "source_format": {
-            "type": "string",
-            "enum": ["github-actions", "airflow", "crewai", "n8n", "argo", "langgraph"],
-            "description": "Source format (for importing TO OSOP)."
-          },
-          "target_format": {
-            "type": "string",
-            "enum": ["crewai", "n8n", "argo"],
-            "description": "Target format (for exporting FROM OSOP)."
-          }
-        }
       }
     },
     {
       "name": "osop.diff",
-      "description": "Compare two OSOP workflows structurally. Returns added/removed/changed nodes, edges, and metadata.",
+      "description": "Compare two OSOP workflows or execution logs structurally. Returns added/removed/changed nodes, edges, durations, and costs.",
       "inputSchema": {
         "type": "object",
         "properties": {
           "content_a": { "type": "string", "description": "First OSOP YAML content." },
-          "file_path_a": { "type": "string", "description": "Path to first .osop.yaml file." },
+          "file_path_a": { "type": "string", "description": "Path to first file." },
           "content_b": { "type": "string", "description": "Second OSOP YAML content." },
-          "file_path_b": { "type": "string", "description": "Path to second .osop.yaml file." }
+          "file_path_b": { "type": "string", "description": "Path to second file." }
         }
       }
     },
     {
-      "name": "osop.notion",
-      "description": "Convert an OSOP workflow into Notion database-ready structures. Returns database schema and page payloads for the Notion API.",
+      "name": "osop.optimize",
+      "description": "Synthesize an optimized .osop workflow from multiple .osoplog execution records. Analyzes patterns, bottlenecks, and failure modes to produce a better workflow.",
       "inputSchema": {
         "type": "object",
         "properties": {
-          "content": { "type": "string", "description": "OSOP YAML content." },
-          "file_path": { "type": "string", "description": "Path to .osop.yaml file." }
-        },
-        "oneOf": [
-          { "required": ["content"] },
-          { "required": ["file_path"] }
-        ]
-      }
-    },
-    {
-      "name": "osop.risk_assess",
-      "description": "Analyze an OSOP workflow for security risks, permission gaps, unguarded destructive paths, missing approval gates, cost exposure, and segregation of duties violations. Returns a risk score (0-100), verdict (safe/caution/warning/danger), and actionable findings.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "content": {
-            "type": "string",
-            "description": "The OSOP YAML content to assess."
+          "log_paths": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Paths to .osoplog.yaml files to analyze."
           },
-          "file_path": {
+          "base_osop_path": {
             "type": "string",
-            "description": "Path to an .osop.yaml file to assess."
+            "description": "Optional base .osop file to optimize (if omitted, generates from scratch)."
+          },
+          "goal": {
+            "type": "string",
+            "description": "Optimization goal (e.g., 'reduce cost', 'speed up step 3')."
+          },
+          "prompt_only": {
+            "type": "boolean",
+            "description": "Output the optimization prompt without calling LLM.",
+            "default": false
           }
         },
-        "oneOf": [
-          { "required": ["content"] },
-          { "required": ["file_path"] }
-        ]
+        "required": ["log_paths"]
+      }
+    }
+    },
+    {
+      "name": "osop.view",
+      "description": "Render a .sop file into standalone HTML. Reads all referenced .osop workflows and produces a self-contained document you can open in any browser.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "file_path": {
+            "type": "string",
+            "description": "Path to a .sop file."
+          }
+        },
+        "required": ["file_path"]
       }
     }
   ]

@@ -4,7 +4,7 @@
 
 ### Workflow & Automation
 
-- **[OSOP MCP Server](https://github.com/Archie0125/osop-mcp)** — 5 tools for AI agent workflows: validate schemas, render Mermaid diagrams, generate reports, diff workflows, and assess security risks. The standard format for describing and logging what AI agents do.
+- **[OSOP MCP Server](https://github.com/Archie0125/osop-mcp)** — 4 tools for AI agent workflows: validate schemas, record executions, diff workflows, and optimize from logs. The standard format for describing and logging what AI agents do.
 
 ## PR Details
 
@@ -21,7 +21,7 @@ Adds the OSOP MCP Server to the Workflow & Automation section.
 
 OSOP is the standard format for describing and logging AI agent workflows. Two YAML files: `.osop` (what should happen) and `.osoplog` (what actually happened).
 
-The MCP server provides 5 focused tools:
+The MCP server provides 4 tools:
 
 | Tool | What it does |
 |------|-------------|
