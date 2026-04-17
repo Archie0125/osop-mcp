@@ -103,6 +103,7 @@ def generate_osoplog(
         "runtime": {
             "agent": agent,
             "model": model or "multi",
+            "source": "executor",
         },
         "node_records": node_records,
         "result_summary": (

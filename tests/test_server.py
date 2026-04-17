@@ -47,10 +47,15 @@ class TestListTools:
             assert isinstance(tool.inputSchema, dict)
 
     async def test_known_tools_present(self):
+        """All 8 canonical OSOP tools must be exposed by the MCP server."""
         tools = await list_tools()
         names = {t.name for t in tools}
-        expected = {"osop.validate", "osop.render", "osop.risk_assess", "osop.optimize"}
-        assert expected.issubset(names)
+        expected = {
+            "osop.init", "osop.validate", "osop.record", "osop.replay",
+            "osop.log", "osop.diff", "osop.optimize", "osop.view",
+        }
+        assert expected.issubset(names), \
+            f"Missing tools: {expected - names}"
 
 
 # ---------------------------------------------------------------------------

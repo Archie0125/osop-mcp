@@ -1,8 +1,21 @@
 {
   "tools": [
     {
+      "name": "osop.init",
+      "description": "Initialize OSOP in a project directory: creates sessions/ and adds an OSOP section to CLAUDE.md. Idempotent — safe to run on a project that's already initialized.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "project_dir": {
+            "type": "string",
+            "description": "Absolute path to the project root. Defaults to current working directory."
+          }
+        }
+      }
+    },
+    {
       "name": "osop.validate",
-      "description": "Validate an OSOP workflow or execution log against the schema. Returns errors with locations. Use before record to check format.",
+      "description": "Validate an OSOP workflow (.osop) or execution log (.osoplog) against the canonical schema. Returns errors with field locations. Use before record/replay.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -29,7 +42,7 @@
     },
     {
       "name": "osop.record",
-      "description": "Execute an OSOP workflow and produce an .osoplog execution record. Validates the workflow internally before execution. The core OSOP operation.",
+      "description": "Execute an OSOP workflow via the full executor (cost limits, risk_assess pre-flight, agent/api/sub-agent dispatch) and produce an .osoplog at the end. Use osop.replay for streaming/durable execution of cli+human workflows.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -59,8 +72,76 @@
       }
     },
     {
+      "name": "osop.replay",
+      "description": "Execute an .osop workflow with live .osoplog streaming via the LiveLog SDK — partial state stays durable on crash. v1 supports cli + human nodes; agent/api are recorded as SKIPPED with a TODO marker. For full executor use osop.record.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "file_path": {
+            "type": "string",
+            "description": "Path to an .osop.yaml file to execute."
+          },
+          "allow_exec": {
+            "type": "boolean",
+            "description": "Allow cli nodes to actually run shell commands.",
+            "default": false
+          },
+          "interactive": {
+            "type": "boolean",
+            "description": "Pause for input on human nodes.",
+            "default": false
+          },
+          "continue_on_error": {
+            "type": "boolean",
+            "description": "Don't halt on FAILED node; mark and continue.",
+            "default": false
+          },
+          "output_dir": {
+            "type": "string",
+            "description": "Directory where the .osoplog is written (default: cwd)."
+          },
+          "timeout_seconds": {
+            "type": "integer",
+            "description": "Default per-node timeout in seconds (overridable via node.timeout_sec).",
+            "default": 300
+          }
+        },
+        "required": ["file_path"]
+      }
+    },
+    {
+      "name": "osop.log",
+      "description": "Synthesize an .osop workflow definition + .osoplog execution record from a Claude Code transcript JSONL — uses real tool-call evidence, not LLM self-report. Source can be a session id (looked up under ~/.claude/projects/), an explicit jsonl path, or omitted (auto-resolves the most recent transcript for the project_dir).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string",
+            "description": "Session id, transcript .jsonl path, or omitted for auto-resolve."
+          },
+          "project_dir": {
+            "type": "string",
+            "description": "Project directory used for auto-resolve when source is omitted."
+          },
+          "short_desc": {
+            "type": "string",
+            "description": "Short description for output filenames (default: derived from date+session id)."
+          },
+          "output_dir": {
+            "type": "string",
+            "description": "Where to write the .osop + .osoplog files (default: <project_dir>/sessions)."
+          },
+          "tags": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Extra tag(s) attached to the .osop output."
+          }
+        }
+      }
+    },
+    {
       "name": "osop.diff",
-      "description": "Compare two OSOP workflows or execution logs structurally. Returns added/removed/changed nodes, edges, durations, and costs.",
+      "description": "Compare two .osop workflows or two .osoplog execution logs structurally. Returns added/removed/changed nodes, edges, durations, and costs.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -98,7 +179,6 @@
         },
         "required": ["log_paths"]
       }
-    }
     },
     {
       "name": "osop.view",
@@ -109,6 +189,16 @@
           "file_path": {
             "type": "string",
             "description": "Path to a .sop file."
+          },
+          "output_path": {
+            "type": "string",
+            "description": "Where to write the HTML (default: <sop-id>.html next to the .sop)."
+          },
+          "lang": {
+            "type": "string",
+            "enum": ["en", "zh-TW"],
+            "description": "UI language for the rendered HTML.",
+            "default": "en"
           }
         },
         "required": ["file_path"]

@@ -1,11 +1,13 @@
-"""OSOP MCP Server — Validate, Record, Diff, Optimize AI agent workflows.
+"""OSOP MCP Server — Init, Validate, Record, Replay, Log, Diff, Optimize, View.
 
-Four tools: validate, record, diff, optimize.
+Eight tools mirroring the `osop` CLI. `osop.replay` and `osop.log` are the
+durable-streaming and transcript-synthesis entry points added in v1.0.
 """
 
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -19,6 +21,37 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from tools.validate import validate
 from tools.diff import diff_workflows, diff_logs
 from tools.common import load_yaml
+
+
+def _run_osop_cli(args: list[str], cwd: str | None = None) -> dict:
+    """Dispatch a tool by shelling out to the installed `osop` CLI.
+
+    Used for commands that don't have a direct Python entry point on
+    the server side yet (init, replay, log, view). Returns a dict with
+    exit code + stdout + stderr so MCP clients can surface failures.
+    """
+    try:
+        proc = subprocess.run(
+            ["osop", *args],
+            capture_output=True,
+            text=True,
+            cwd=cwd,
+            timeout=600,
+        )
+    except FileNotFoundError:
+        return {
+            "error": "osop CLI not found on PATH. Install with 'pip install -e osop/' from the OSOP project root.",
+            "args": args,
+        }
+    except subprocess.TimeoutExpired:
+        return {"error": "osop CLI timed out after 600s", "args": args}
+
+    return {
+        "exit_code": proc.returncode,
+        "stdout": (proc.stdout or "")[-4000:],
+        "stderr": (proc.stderr or "")[-2000:],
+        "status": "ok" if proc.returncode == 0 else "failed",
+    }
 
 # Load tool definitions from tools.json
 _TOOLS_PATH = Path(__file__).resolve().parent.parent / "tools.json"
@@ -46,7 +79,45 @@ async def list_tools() -> list[Tool]:
 async def call_tool(name: str, arguments: dict) -> list[TextContent]:
     """Dispatch tool calls to implementations."""
     try:
-        if name == "osop.validate":
+        if name == "osop.init":
+            project_dir = arguments.get("project_dir")
+            result = _run_osop_cli(["init"], cwd=project_dir)
+
+        elif name == "osop.replay":
+            args = ["replay", arguments["file_path"]]
+            if arguments.get("allow_exec"):
+                args.append("--allow-exec")
+            if arguments.get("interactive"):
+                args.append("--interactive")
+            if arguments.get("continue_on_error"):
+                args.append("--continue-on-error")
+            if arguments.get("output_dir"):
+                args.extend(["-o", arguments["output_dir"]])
+            if arguments.get("timeout_seconds"):
+                args.extend(["--timeout", str(arguments["timeout_seconds"])])
+            result = _run_osop_cli(args)
+
+        elif name == "osop.log":
+            args = ["log"]
+            if arguments.get("source"):
+                args.append(arguments["source"])
+            if arguments.get("short_desc"):
+                args.extend(["-d", arguments["short_desc"]])
+            if arguments.get("output_dir"):
+                args.extend(["-o", arguments["output_dir"]])
+            for tag in arguments.get("tags", []) or []:
+                args.extend(["--tag", tag])
+            result = _run_osop_cli(args, cwd=arguments.get("project_dir"))
+
+        elif name == "osop.view":
+            args = ["view", arguments["file_path"]]
+            if arguments.get("output_path"):
+                args.extend(["-o", arguments["output_path"]])
+            if arguments.get("lang"):
+                args.extend(["--lang", arguments["lang"]])
+            result = _run_osop_cli(args)
+
+        elif name == "osop.validate":
             result = validate(
                 content=arguments.get("content"),
                 file_path=arguments.get("file_path"),
