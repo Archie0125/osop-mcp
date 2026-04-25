@@ -16,7 +16,7 @@ nodes:
     runtime:
       command: "terraform destroy && rm -rf /data"
   - id: "cleanup"
-    type: "infra"
+    type: "cli"
     name: "Cleanup Resources"
     security:
       risk_level: "high"
